@@ -86,7 +86,7 @@ class _HomePageState extends State<HomePage> {
       home: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: Text('Plugin example app'),
+          title: Text('Compose Email'),
           actions: <Widget>[
             IconButton(
               onPressed: send,
@@ -297,7 +297,7 @@ class _HomePageState extends State<HomePage> {
               color: Colors.white, fab: true)
           : _buildIconButton(Icons.add, isListening ? _saveTranscription : null,
               color: Colors.white,
-              backgroundColor: Colors.greenAccent,
+              backgroundColor: Colors.redAccent,
               fab: true),
     ];
     Row buttonBar = new Row(
@@ -308,7 +308,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildIconButton(IconData icon, VoidCallback onPress,
       {Color color: Colors.grey,
-      Color backgroundColor: Colors.pinkAccent,
+      Color backgroundColor: Colors.red,
       bool fab = false}) {
     return  new FloatingActionButton(
               child: new Icon(icon),

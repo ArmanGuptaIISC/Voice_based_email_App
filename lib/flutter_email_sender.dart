@@ -48,7 +48,7 @@ class Email {
     .catchError((e){
       print('Error occurred: $e');
       _scaffoldKey.currentState.showSnackBar(SnackBar(
-        content: Text('Email is not sent.Please check your email or check your internet connection'),));
+        content: Text(e),));
       });
   }
 
