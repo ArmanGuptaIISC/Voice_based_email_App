@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 
 import 'package:fluttermail/MailUI.dart';
+import 'package:fluttermail/password_page.dart';
 import 'package:fluttermail/recognizer.dart';
 class LoginPage extends StatefulWidget {
   @override
@@ -22,7 +23,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   
   final _passController=new TextEditingController();
   final _emailController=new TextEditingController();
-  /**For speech recognition */String transcription = '';
+  /**For speech recognition */
+  String transcription = '';
   String prevTranscription = '';
   bool authorized = false;
 
@@ -101,7 +103,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   _sizedBox(100.0),
                   _emailInput(),
                   _sizedBox(15.0),
-                  _passwordInput(),
+                 // _passwordInput(),
                   _sizedBox(30.0),
                   _submitButton(),
                 
@@ -118,43 +120,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     final form = _formkey.currentState;
     if (form.validate()) {
     form.save();
-     
-    // try{
-    // FirebaseUser user= await  auth.signInWithEmailAndPassword(email: _email,password: _password);
-    // assert(user != null);
-    // assert(await user.getIdToken() != null);
-
-    // final FirebaseUser currentUser = await auth.currentUser();
-    // assert(user.uid == currentUser.uid);
-
-    // print('signInEmail succeeded: $user')
-    //}
-
-    //catch(e){
-
-     // print (e.message);
-      showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        // return object of type Dialog
-        return AlertDialog(
-          title: new Text("Important Notice"),
-          content: new Text("1.Make sure your email and password are valid otherwise your message wouldn't be sent.\n\n2.For Security purpose only one time access authentication is created and as soon as you leave this app your session will be deleted."),
-          actions: <Widget>[
-            // usually buttons at the bottom of the dialog
-            new FlatButton(
-              child: new Text("Close"),
-              onPressed: () {
-                //Navigator.of(context).pop();
-                Navigator.popUntil(context, (_) => !Navigator.canPop(context));
-                Navigator.pushReplacement(context,MaterialPageRoute(builder: (context)=>HomePage(email:_email,password:_password)));
-              },
-            ),
-          ],
-        );
-      },
-    );
-   // }
+    Navigator.push(context,MaterialPageRoute(builder: (context)=>PassPage(email:_email)));
     }
     else {
     setState(() => _autoValidate = true);
@@ -218,24 +184,7 @@ Widget _emailInput() {
           ]
     );
   }
-  Widget _passwordInput() {
-    return new TextFormField(
-          obscureText: true,
-          autofocus: false,
-          controller: _passController,
-          decoration: new InputDecoration(
-              labelText: 'Password',
-              icon: new Icon(
-                Icons.lock,
-                color: Colors.grey,
-              )),
-          validator: (input){
-                           if(input.length<6)
-                            return 'Your password need to be atleast 6 characters';
-          },
-          onSaved: (value) => _password = value,
-        );
-  }
+
   Widget _submitButton() {
       return
         new Padding(
@@ -248,7 +197,7 @@ Widget _emailInput() {
                   minWidth: 200.0,
                   height: 42.0,
                   color: Colors.blue,
-                  child: new Text('Login',
+                  child: new Text('Proceed',
                       style:
                           new TextStyle(fontSize: 20.0, color: Colors.white)),
                   onPressed: signIn,
