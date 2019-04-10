@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:fluttermail/login_page.dart';
 import 'flutter_email_sender.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -57,27 +58,33 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
    send() {
-    new  Email(widget.email,widget.password,_subjectController.text,_bodyController.text, [_recipientController.text],attachment,_scaffoldKey);
+    List mailIds = _recipientController.text.split(",");
+    print(mailIds);
+    String p = "[a-zA-Z0-9\+\.\_\%\-\+]{1,256}" +
+      "\\@" +
+      "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
+      "(" +
+      "\\." +
+      "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
+      ")+";
+    RegExp regExp = new RegExp(p);
+    
+    try{
+    for(var i= 0 ;i<mailIds.length; i++)
+    if(regExp.hasMatch(mailIds[i].trim()))
+      mailIds[i] = mailIds[i].trim();
+    else
+      mailIds.removeAt(i);
+    }
+    catch(e){}
+    print(mailIds);
 
-    // try {
-    //   await FlutterEmailSender.send(email);
-    //   platformResponse = 'success';
-    // } catch (error) {
-    //   platformResponse = error.toString();
-    // }
+    new  Email(widget.email,widget.password,_subjectController.text,_bodyController.text,mailIds ,attachment,_scaffoldKey);
 
-    // if (!mounted) return;
-
-    // _scaffoldKey.currentState.showSnackBar(SnackBar(
-    //   content: Text(platformResponse),
-    // ));
   }
 
   @override
   Widget build(BuildContext context) {
-
-   // Size size = MediaQuery.of(context).size;/**transcription */
-
 
     final Widget imagePath = Text(attachment ?? '');
 
@@ -94,7 +101,46 @@ class _HomePageState extends State<HomePage> {
             )
           ],
         ),
-        body: SingleChildScrollView(
+        drawer: new Drawer(
+     child: new ListView(
+       children: <Widget>[
+         UserAccountsDrawerHeader(
+           accountName: new Text(widget.email.substring(0,widget.email.indexOf('@'))),
+           accountEmail: new Text(widget.email),
+           currentAccountPicture: new CircleAvatar(
+             backgroundColor: Colors.white,
+             child: new Text(widget.email.substring(0,1).toUpperCase()),
+           ),
+         ),
+         new ListTile(
+           title: new Text("Sent"),
+           trailing: new Icon(Icons.compare_arrows),
+           onTap:(){
+             //Navigator.of(context).pop();
+             //Navigator.of(context).push(new MaterialPageRoute(builder:(BuildContext context)=>new NewPage("Page One")));
+             }
+         ),
+         new ListTile(
+           title:new Text("Received"),
+           trailing:new Icon(Icons.get_app),
+           onTap:(){
+             //Navigator.of(context).pop();
+             //Navigator.of(context).push(new MaterialPageRoute(builder:(BuildContext context)=>new NewPage("Page Two")));
+             }
+         ),
+         new Divider(),
+          new ListTile(
+            title:new Text("Log Out"),
+            trailing: new Icon(Icons.exit_to_app),
+            onTap:(){
+               Navigator.popUntil(context, (_) => !Navigator.canPop(context));
+               Navigator.pushReplacement(context,MaterialPageRoute(builder: (context)=>LoginPage()));
+            },
+          )
+       ],
+     ),
+    ),
+   body: SingleChildScrollView(
           child: Center(
             child: Padding(
               padding: EdgeInsets.all(8.0),
@@ -130,7 +176,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   Padding(
-                   
                     padding: EdgeInsets.all(8.0),
                     child: TextField(
                       controller: _bodyController,
@@ -139,22 +184,25 @@ class _HomePageState extends State<HomePage> {
                           labelText: 'Body', border: OutlineInputBorder()),
                     ),
                   ),
+
+                  imagePath,
+                  
                   Padding(
                     padding: EdgeInsets.all(8.0) ,
 
                     child:buildSpeechButton(context)
                    ),
-                  imagePath,
+                  
                 ],
               ),
             ),
           ),
         ),
-        // floatingActionButton: FloatingActionButton.extended(
-        //   icon: Icon(Icons.camera),
-        //   label: Text('Add Image'),
-        //   onPressed: _openImagePicker,
-        // ),
+         /*floatingActionButton: FloatingActionButton.extended(
+           icon: Icon(Icons.camera),
+           label: Text('Add Image'),
+           onPressed: _openImagePicker,
+         ),*/
       
       ),
     );
@@ -176,52 +224,68 @@ class _HomePageState extends State<HomePage> {
         child: new Column(mainAxisSize: MainAxisSize.min, children: blocks));
   }
   void _openImagePicker() async {
+    try {
     File pick = await ImagePicker.pickImage(source: ImageSource.gallery);
     setState(() {
       attachment = pick.path;
     });
+    }
+    catch(e)
+    {}
   }
 
    void _saveTranscription() {
     if (transcription.isEmpty) return;
+    if(transcription=="cleanup" || transcription =='clean up')
+    {
+        prevTranscription='';
+        transcription='';
+        _recipientController.text='';
+        _subjectController.text='';
+        _bodyController.text='Mail Body.';
+        attachment = '';
+    }
+    if(transcription == 'next')
+    {
+      prevTranscription = '';
+      transcription = '';
+    }
+    if(transcription=="add image" || transcription == 'addimage')
+    {
+         try {
+         _openImagePicker();
+         }
+         catch(e){}
+    }
 
     if(!prevTranscription.isEmpty)
     {
        if(prevTranscription=='recipient')
        {
          setState(() {
-    
           transcription=transcription.toLowerCase();
           transcription=transcription.replaceAll(new RegExp(r"\s+\b|\b\s"), "");
-
           print(transcription);
-         _recipientController.text=transcription;
+         _recipientController.text += transcription+",";
          transcription = '';
        });
        }
        else if(prevTranscription=='subject')
        {
          setState(() {
-         _subjectController.text=transcription;
+         _subjectController.text += transcription+" ";
          transcription = '';
        });
        }
        else if(prevTranscription=='body')
        {
          setState(() {
-         _bodyController.text=transcription;
+         _bodyController.text += transcription + " ";
          transcription = '';
        });
        }
-       else if(transcription=="cleanup")
-       {
-         prevTranscription='';
-         transcription='';
-         _recipientController.text='';
-         _subjectController.text='';
-         _bodyController.text='Mail Body.';
-       }
-       prevTranscription=transcription;
+       else if(transcription == 'send') send();
+       
     }
     else
     {
@@ -301,6 +365,7 @@ class _HomePageState extends State<HomePage> {
               fab: true),
     ];
     Row buttonBar = new Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: buttons
       );
     return buttonBar;

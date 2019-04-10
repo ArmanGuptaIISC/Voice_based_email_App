@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
-
-import 'package:fluttermail/MailUI.dart';
 import 'package:fluttermail/password_page.dart';
 import 'package:fluttermail/recognizer.dart';
 class LoginPage extends StatefulWidget {
@@ -12,18 +10,18 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
   
-
-  final GlobalKey<ScaffoldState> _scaffoldKey= GlobalKey<ScaffoldState>();
-
   final GlobalKey<FormState> _formkey= GlobalKey<FormState>();
-  String _email='',_password='';
+
+  String _email='';
   bool _autoValidate=false;
   AnimationController _iconAnimationController;
   Animation<double> _iconAnimation;
-  
-  final _passController=new TextEditingController();
+
   final _emailController=new TextEditingController();
-  /**For speech recognition */
+  final _textBox = new TextEditingController();
+  ///For speech recognition 
+  ///
+
   String transcription = '';
   String prevTranscription = '';
   bool authorized = false;
@@ -103,10 +101,13 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   _sizedBox(100.0),
                   _emailInput(),
                   _sizedBox(15.0),
-                 // _passwordInput(),
                   _sizedBox(30.0),
                   _submitButton(),
-                
+
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: buildSpeechButton(context),
+                  )
                 ],
               ),
             ))
@@ -114,6 +115,61 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
        ),
     );
   }
+
+  Widget _sizedBox(_height) {
+    return new SizedBox(height: _height);
+  }
+
+  Widget _logo() {
+    return new Hero(
+      tag: 'hero',
+        child: new FlutterLogo(
+               size: _iconAnimation.value * 100.0
+       ),
+    );
+  }
+
+Widget _emailInput() {
+    return Row(
+      children:[ 
+        Flexible(
+          child: new TextFormField(
+              keyboardType: TextInputType.emailAddress,
+              autofocus: false,
+              controller: _emailController,
+              decoration: new InputDecoration(
+                  labelText: 'Email',
+                  icon: new Icon(
+                    Icons.mail,
+                    color: Colors.grey,
+                  )),
+              validator: _validateEmail,
+              onSaved:(input)=> _email=input,
+            ),
+        ),
+          ]
+    );
+  }
+
+ Widget _submitButton() {
+      return
+        new Padding(
+            padding: EdgeInsets.symmetric(vertical: 16.0),
+            child: new Material(
+                borderRadius: BorderRadius.circular(30.0),
+                shadowColor: Colors.blueAccent.shade100,
+                elevation: 5.0,
+                child: new MaterialButton(
+                  minWidth: 200.0,
+                  height: 42.0,
+                  color: Colors.blue,
+                  child: new Text('Proceed',
+                      style:
+                          new TextStyle(fontSize: 20.0, color: Colors.white)),
+                  onPressed: signIn,
+                )));
+  }
+
 
   Future<void> signIn() async
   {
@@ -150,64 +206,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   // The pattern of the email didn't match the regex above.
   return 'Email is not valid';
 }
-/*Ingredient of login form starts*/
 
-Widget _logo() {
-    return new Hero(
-      tag: 'hero',
-      
-        child: new FlutterLogo(
-               size: _iconAnimation.value * 100.0
-       ),
-    );
-  }
-
-Widget _emailInput() {
-    return Row(
-      children:[ 
-        Flexible(
-          child: new TextFormField(
-              keyboardType: TextInputType.emailAddress,
-              autofocus: false,
-              controller: _emailController,
-              decoration: new InputDecoration(
-                  labelText: 'Email',
-                  icon: new Icon(
-                    Icons.mail,
-                    color: Colors.grey,
-                  )),
-              validator: _validateEmail,
-              onSaved:(input)=> _email=input,
-            ),
-        ),
-          _buildButtonBar()
-          ]
-    );
-  }
-
-  Widget _submitButton() {
-      return
-        new Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
-            child: new Material(
-                borderRadius: BorderRadius.circular(30.0),
-                shadowColor: Colors.blueAccent.shade100,
-                elevation: 5.0,
-                child: new MaterialButton(
-                  minWidth: 200.0,
-                  height: 42.0,
-                  color: Colors.blue,
-                  child: new Text('Proceed',
-                      style:
-                          new TextStyle(fontSize: 20.0, color: Colors.white)),
-                  onPressed: signIn,
-                )));
-  }
-
-
-  Widget _sizedBox(_height) {
-    return new SizedBox(height: _height);
-  }
 
 
   /****************** */
@@ -217,13 +216,22 @@ Widget _emailInput() {
     List<Widget> blocks = [
       _buildButtonBar(),
     ];
-    if (isListening || transcription != '')_emailController.text=transcription;
-      // blocks.insert(
-      //     1,
-      //     _buildTranscriptionBox(
-      //         text: transcription,
-      //         onCancel: _cancelRecognitionHandler,
-      //        ) );
+    if (isListening || transcription != '')
+    {
+       _textBox.text = transcription;
+       blocks.insert(
+           1,
+           new TextField(
+             controller: _textBox,
+             enabled: false,
+             decoration: new InputDecoration(
+               border: new OutlineInputBorder(
+                        borderRadius: new BorderRadius.circular(25.0),
+               )
+             ),
+           )
+       );
+    }
     return new Center(
         child: new Column(mainAxisSize: MainAxisSize.min, children: blocks));
   }
@@ -231,8 +239,7 @@ Widget _emailInput() {
     if (transcription.isEmpty) return;
     
     setState(() {
-    
-          
+     
           transcription=transcription.toLowerCase();
           transcription=transcription.replaceAll(new RegExp(r"\s+\b|\b\s"), "");
           if(transcription=="clearemail")
@@ -242,7 +249,10 @@ Widget _emailInput() {
           else if(transcription=='clearall')
           {
             _emailController.text='';  
-            _passController.text='';
+          }
+          else if(transcription=='proceed')
+          {
+            signIn();
           }
           else
           {
@@ -288,7 +298,6 @@ Widget _emailInput() {
         setState(() => isListening = call.arguments);
         break;
       case "onSpeech":
-        //if (todos.isNotEmpty) if (transcription == todos.last.label) return;
         setState(() => transcription = call.arguments);
         break;
       case "onRecognitionStarted":
@@ -308,6 +317,7 @@ Widget _emailInput() {
 
 
  //Activate when we are writing something
+
   Widget _buildButtonBar() {
     List<Widget> buttons = [
       !isListening
@@ -316,24 +326,23 @@ Widget _emailInput() {
               color: Colors.white, fab: true)
           : _buildIconButton(Icons.add, isListening ? _saveTranscription : null,
               color: Colors.black,
-            //  backgroundColor: Colors.transparent,
               fab: true),
     ];
     Row buttonBar = new Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: buttons
       );
     return buttonBar;
   }
 
   Widget _buildIconButton(IconData icon, VoidCallback onPress,
-      {Color color: Colors.black87,
-      //Color backgroundColor: Colors.transparent,
-      bool fab = false}) {
+      {
+        Color color: Colors.black87,
+        bool fab = false
+      }) {
     return  new IconButton(
               icon: new Icon(icon),
               onPressed: onPress,
-
-             // backgroundColor: backgroundColor
              );
   }
 

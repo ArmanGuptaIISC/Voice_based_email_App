@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:mailer2/mailer.dart';
 
@@ -32,13 +34,17 @@ class Email {
   // Create our message.
    var envelope = new Envelope()
     ..from = senderEmail
-    ..recipients.add(recipients[0])
-   // ..ccRecipients.addAll(['destCc1@example.com', 'destCc2@example.com'])
+   //..recipients.add(recipients[0])
+    ..ccRecipients.addAll(recipients)
    // ..bccRecipients.add(new Address('bccAddress@example.com'))
     ..subject = subject
     ..text = "Hello there"
     ..html = "<p>$body</p>";
-  
+
+  if(attachmentPath.isNotEmpty)
+  {
+    envelope.attachments.addAll([new Attachment(file:new File(attachmentPath))]);
+  }
    emailTransport.send(envelope)
     .then((envelope){
       print('Email sent!');
