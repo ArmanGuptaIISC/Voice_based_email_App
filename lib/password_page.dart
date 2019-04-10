@@ -37,8 +37,12 @@ class _PassPageState extends State<PassPage> with SingleTickerProviderStateMixin
 
   @override
   void dispose() {
-    super.dispose();
+    if(mounted)
+    {
+    _iconAnimationController.dispose();
     if (isListening) _cancelRecognitionHandler();
+    }
+    super.dispose();
   }
   @override
     void initState() {
@@ -310,6 +314,7 @@ class _PassPageState extends State<PassPage> with SingleTickerProviderStateMixin
   Future _cancelRecognitionHandler() async {
     final res = await SpeechRecognizer.cancel();
 
+    if(!mounted) return;
     setState(() {
       transcription = '';
       isListening = res;

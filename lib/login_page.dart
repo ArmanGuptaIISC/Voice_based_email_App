@@ -32,8 +32,13 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
   @override
   void dispose() {
-    super.dispose();
+    
+    if(mounted)
+    {
+    _iconAnimationController.dispose();
     if (isListening) _cancelRecognitionHandler();
+    }
+    super.dispose();
   }
 
   @override
@@ -223,6 +228,7 @@ Widget _emailInput() {
            1,
            new TextField(
              controller: _textBox,
+             onTap: ()=>{_textBox.text=""},
              enabled: false,
              decoration: new InputDecoration(
                border: new OutlineInputBorder(
@@ -281,6 +287,7 @@ Widget _emailInput() {
   Future _cancelRecognitionHandler() async {
     final res = await SpeechRecognizer.cancel();
 
+    if(!mounted) return;
     setState(() {
       transcription = '';
       isListening = res;

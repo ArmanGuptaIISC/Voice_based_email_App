@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttermail/login_page.dart';
 import 'flutter_email_sender.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttermail/recognizer.dart';
@@ -234,6 +234,23 @@ class _HomePageState extends State<HomePage> {
     {}
   }
 
+  void _openFileExplorer({pickingType = FileType.IMAGE , extension : 'jpeg'}) async {
+    var _path;
+   // if (pickingType != FileType.CUSTOM) {
+      try {
+        _path = await FilePicker.getFilePath(type: pickingType,fileExtension: extension);
+      } on PlatformException catch (e) {
+        print("Unsupported operation" + e.toString());
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        attachment = _path;
+      });
+   // }
+  }
+
    void _saveTranscription() {
     if (transcription.isEmpty) return;
     if(transcription=="cleanup" || transcription =='clean up')
@@ -242,23 +259,44 @@ class _HomePageState extends State<HomePage> {
         transcription='';
         _recipientController.text='';
         _subjectController.text='';
-        _bodyController.text='Mail Body.';
+        _bodyController.text='Mail body.';
         attachment = '';
     }
-    if(transcription == 'next')
+    else if(transcription == 'next')
     {
       prevTranscription = '';
       transcription = '';
     }
-    if(transcription=="add image" || transcription == 'addimage')
+    else if(transcription=="add image" || transcription == 'addimage')
     {
          try {
-         _openImagePicker();
+         _openFileExplorer(pickingType: FileType.IMAGE);
          }
-         catch(e){}
+         catch(e){
+           print(e.message);
+         }
     }
+    else  if(transcription=="add PDF")
+    {
+         try {
+         _openFileExplorer(pickingType: FileType.CUSTOM , extension: 'pdf');
+         }
+         catch(e){
+           print(e.message);
+         }
+    }
+    else if(transcription == "add document")
+    {
+      try{
+        _openFileExplorer(pickingType: FileType.CUSTOM , extension: 'docx');
+      }
+      catch(e){
+        print(e.message);
+      }
+    }
+    else if(transcription == 'send') send();
 
-    if(!prevTranscription.isEmpty)
+    else if(!prevTranscription.isEmpty)
     {
        if(prevTranscription=='recipient')
        {
@@ -280,13 +318,16 @@ class _HomePageState extends State<HomePage> {
        else if(prevTranscription=='body')
        {
          setState(() {
-         _bodyController.text += transcription + " ";
-         transcription = '';
+          if(_bodyController.text == 'Mail body.')
+          _bodyController.text = '';
+          _bodyController.text += transcription + " ";
+          transcription = '';
        });
        }
-       else if(transcription == 'send') send();
+      
        
     }
+    
     else
     {
       prevTranscription=transcription;
