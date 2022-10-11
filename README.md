@@ -1,8 +1,3 @@
-# fluttermail
-
-A new Flutter project.
-
-## Getting Started
-
-For help getting started with Flutter, view our online
-[documentation](https://flutter.io/).
+## Voice Based Email Android Application
+The project was created with the intention of helping the blind or handicapped people to write email using voice commands only. 
+The Technology used : Flutter, Dart, Objective-C
